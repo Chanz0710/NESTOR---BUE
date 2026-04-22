@@ -144,3 +144,59 @@ canvas { display: block; }
 .coin-icon { color: var(--coin-color); font-size: 14px; }
 .coin-icon.large { font-size: 22px; }
 .menu-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; }
+/* ─── HOW TO PLAY ────────────────────────────────── */
+#screen-how-to-play {
+  background: var(--bg-deep);
+}
+.htp-content {
+  flex: 1; overflow-y: auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px; padding: 16px;
+}
+.htp-card {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.htp-icon { font-size: 22px; }
+.htp-card h3 { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.htp-card p  { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ─── LEVEL SELECT ───────────────────────────────── */
+#screen-level-select { background: var(--bg-deep); }
+.level-grid {
+  flex: 1; overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px; padding: 16px;
+  align-content: start;
+}
+.level-cell {
+  aspect-ratio: 1;
+  background: var(--bg-panel); border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; cursor: pointer;
+  transition: all 0.15s; position: relative;
+  overflow: hidden;
+}
+.level-cell:hover:not(.locked) { border-color: var(--amber); background: var(--bg-surface); transform: translateY(-2px); }
+.level-cell.locked { opacity: 0.4; cursor: not-allowed; }
+.level-cell.current { border-color: var(--amber); box-shadow: 0 0 0 2px rgba(232,160,32,0.25); }
+.level-cell.has-red { border-color: rgba(192,57,43,0.5); }
+.level-num {
+  font-family: var(--font-game); font-size: 22px;
+  font-weight: 900; color: var(--text-primary);
+}
+.level-stars-mini {
+  display: flex; gap: 2px;
+}
+.sm-star { font-size: 10px; color: var(--star-empty); }
+.sm-star.earned { color: var(--star-gold); }
+.level-lock { font-size: 16px; color: var(--text-muted); }
+.level-diff {
+  position: absolute; top: 4px; right: 6px;
+  font-size: 9px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
