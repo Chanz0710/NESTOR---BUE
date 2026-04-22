@@ -79,6 +79,45 @@
     <div class="level-grid" id="level-grid"></div>
   </div>
 
+  <!-- Game Screen -->
+  <div id="screen-game" class="screen">
+    <div id="game-hud">
+      <div class="hud-left">
+        <div class="hud-level-badge" id="hud-level-num">1</div>
+        <div class="hud-level-info">
+          <div class="hud-level-name" id="hud-level-name">Level 1</div>
+          <div class="hud-objective" id="hud-objective">Get the ball in the bucket</div>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-timer-wrap">
+          <svg class="timer-ring" viewBox="0 0 44 44">
+            <circle cx="22" cy="22" r="18" fill="none" stroke="#1e2a3a" stroke-width="4"/>
+            <circle id="timer-ring-fill" cx="22" cy="22" r="18" fill="none" stroke="#e8a020" stroke-width="4"
+              stroke-dasharray="113" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 22 22)"/>
+          </svg>
+          <span id="hud-timer">0.0</span>
+        </div>
+        <div class="hud-timer-label">seconds</div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-stat"><span class="coin-icon">●</span><span id="hud-coins">0</span></div>
+        <div class="hud-stat"><span class="shape-icon">◻</span><span id="hud-shapes">0</span>/<span id="hud-shape-limit">3</span></div>
+        <button class="hud-btn" id="btn-clue" onclick="Game.useClue()">💡 <span id="clue-cost">5</span></button>
+        <button class="hud-btn" onclick="Game.togglePause()">⏸</button>
+        <button class="hud-btn" onclick="Game.restartLevel()">↺</button>
+        <button class="hud-btn" onclick="Game.showScreen('level-select')">☰</button>
+      </div>
+    </div>
+
+    <div id="game-area">
+      <div id="red-zones-overlay"></div>
+      <canvas id="game-canvas"></canvas>
+      <canvas id="draw-canvas"></canvas>
+      <div id="clue-display" class="clue-display hidden"></div>
+    </div>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
