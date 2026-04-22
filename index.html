@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Make It Right</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 </head>
 <body>
-   <!-- ===== SCREENS ===== -->
+
+  <!-- ===== SCREENS ===== -->
 
   <!-- Main Menu -->
   <div id="screen-menu" class="screen active">
@@ -30,7 +31,43 @@
         <button class="btn btn-secondary" onclick="Game.showScreen('how-to-play')">How to Play</button>
       </div>
     </div>
-  </div
+  </div>
+
+  <!-- How to Play -->
+  <div id="screen-how-to-play" class="screen">
+    <div class="panel-header">
+      <button class="btn-back" onclick="Game.showScreen('menu')">← Back</button>
+      <h2>How to Play</h2>
+    </div>
+    <div class="htp-content">
+      <div class="htp-card">
+        <div class="htp-icon">✏️</div>
+        <h3>Draw Shapes</h3>
+        <p>Use your mouse or finger to draw shapes on the canvas. Freehand, rectangles, circles, and planks are available.</p>
+      </div>
+      <div class="htp-card">
+        <div class="htp-icon">🎯</div>
+        <h3>Reach the Goal</h3>
+        <p>Guide the ball into the green target. Use physics creatively — ramps, weights, bridges all work!</p>
+      </div>
+      <div class="htp-card">
+        <div class="htp-icon">⭐</div>
+        <h3>Earn Stars</h3>
+        <p>Complete levels faster and with fewer shapes to earn 3 stars. Stars unlock bonus coins.</p>
+      </div>
+      <div class="htp-card">
+        <div class="htp-icon">🔴</div>
+        <h3>Red Zones</h3>
+        <p>Red areas are forbidden — you cannot draw inside them. Plan your shapes around the boundaries.</p>
+      </div>
+      <div class="htp-card">
+        <div class="htp-icon">💡</div>
+        <h3>Use Clues</h3>
+        <p>Stuck? Spend coins to reveal a clue. Earn coins by completing levels quickly and with few shapes.</p>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin:0 auto;display:block;" onclick="Game.showScreen('menu')">Got it!</button>
+  </div>
 
   <script src="game.js"></script>
 </body>
