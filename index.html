@@ -141,6 +141,69 @@
     </div>
   </div>
 
+  <!-- Pause Screen -->
+  <div id="screen-pause" class="screen overlay-screen">
+    <div class="overlay-panel">
+      <h2>Paused</h2>
+      <p class="overlay-sub" id="pause-level-name">Level 1</p>
+      <div class="overlay-buttons">
+        <button class="btn btn-primary" onclick="Game.togglePause()">Resume</button>
+        <button class="btn btn-secondary" onclick="Game.restartLevel()">Restart</button>
+        <button class="btn btn-ghost" onclick="Game.showScreen('level-select')">Level Select</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal Reached (3s countdown) -->
+  <div id="screen-goal" class="screen overlay-screen">
+    <div class="goal-flash">
+      <div class="goal-text">Goal Reached!</div>
+      <div class="goal-countdown" id="goal-countdown">3</div>
+    </div>
+  </div>
+
+  <!-- Level Complete -->
+  <div id="screen-complete" class="screen overlay-screen">
+    <div class="complete-panel">
+      <div class="complete-header">
+        <div class="complete-success">Success!</div>
+        <div class="complete-level-name" id="complete-level-name">Level #1</div>
+      </div>
+      <div class="complete-stars" id="complete-stars">
+        <div class="star-wrap" id="star1"><div class="star">★</div><div class="star-label">Goal</div></div>
+        <div class="star-wrap" id="star2"><div class="star">★</div><div class="star-label"><span id="star2-time">10.0s</span></div></div>
+        <div class="star-wrap" id="star3"><div class="star">★</div><div class="star-label"><span id="star3-shapes">1 shape</span></div></div>
+      </div>
+      <div class="complete-stats">
+        <div class="stat-row header">
+          <span>Solved</span>
+          <span id="c-time">0.0s</span>
+          <span id="c-shapes">0</span>
+        </div>
+        <div class="stat-row goal-row">
+          <span>Goal</span>
+          <span id="c-goal-time">10.0s</span>
+          <span id="c-goal-shapes">1</span>
+        </div>
+      </div>
+      <div class="complete-coins">
+        <span class="coin-icon large">●</span>
+        +<span id="complete-coin-reward">3</span>
+      </div>
+      <div class="complete-buttons">
+        <button class="btn-round" onclick="Game.showScreen('level-select')" title="Levels">
+          <svg width="20" height="20" viewBox="0 0 20 20"><rect x="2" y="3" width="16" height="3" rx="1" fill="currentColor"/><rect x="2" y="9" width="16" height="3" rx="1" fill="currentColor"/><rect x="2" y="15" width="16" height="3" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button class="btn-round" onclick="Game.restartLevel()" title="Restart">
+          <svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10 A6 6 0 1 1 7 15.2" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/><polyline points="4,6 4,11 9,11" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn-round primary" onclick="Game.nextLevel()" title="Next Level">
+          <svg width="20" height="20" viewBox="0 0 20 20"><polygon points="6,4 16,10 6,16" fill="currentColor"/><rect x="14" y="4" width="2" height="12" rx="1" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
