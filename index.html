@@ -69,6 +69,16 @@
     <button class="btn btn-primary" style="margin:0 auto;display:block;" onclick="Game.showScreen('menu')">Got it!</button>
   </div>
 
+  <!-- Level Select -->
+  <div id="screen-level-select" class="screen">
+    <div class="panel-header">
+      <button class="btn-back" onclick="Game.showScreen('menu')">← Back</button>
+      <h2>Select Level</h2>
+      <div class="header-coins"><span class="coin-icon">●</span><span id="ls-coin-count">0</span></div>
+    </div>
+    <div class="level-grid" id="level-grid"></div>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
