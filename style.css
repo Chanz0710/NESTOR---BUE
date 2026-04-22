@@ -58,6 +58,7 @@ canvas { display: block; }
   align-items: center; justify-content: center;
   z-index: 100;
 }
+
 /* ─── MAIN MENU ──────────────────────────────────── */
 #screen-menu {
   background: var(--bg-deep);
@@ -101,6 +102,7 @@ canvas { display: block; }
 .coin-icon { color: var(--coin-color); font-size: 14px; }
 .coin-icon.large { font-size: 22px; }
 .menu-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; }
+
 /* ─── MAIN MENU ──────────────────────────────────── */
 #screen-menu {
   background: var(--bg-deep);
@@ -144,6 +146,7 @@ canvas { display: block; }
 .coin-icon { color: var(--coin-color); font-size: 14px; }
 .coin-icon.large { font-size: 22px; }
 .menu-buttons { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; }
+
 /* ─── HOW TO PLAY ────────────────────────────────── */
 #screen-how-to-play {
   background: var(--bg-deep);
@@ -200,6 +203,7 @@ canvas { display: block; }
   font-size: 9px; font-weight: 700; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: 0.06em;
 }
+
 /* ─── GAME HUD ───────────────────────────────────── */
 #game-hud {
   display: flex; align-items: center;
@@ -292,6 +296,7 @@ canvas { display: block; }
 .tool-btn.active { background: rgba(232,160,32,0.12); border-color: var(--amber); color: var(--amber); }
 .tool-btn.danger { color: var(--text-muted); }
 .tool-btn.danger:hover { border-color: #c0392b; color: #e05a4a; }
+
 /* ─── PAUSE OVERLAY ──────────────────────────────── */
 .overlay-panel {
   background: var(--bg-panel); border: 1px solid var(--border);
@@ -398,3 +403,16 @@ canvas { display: block; }
 .btn-round:hover { border-color: var(--border-light); color: var(--text-primary); }
 .btn-round.primary { background: var(--amber); border-color: var(--amber); color: #1a1000; }
 .btn-round.primary:hover { background: var(--amber-light); }
+
+/* ─── SCROLLBAR ──────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* ─── RESPONSIVE ─────────────────────────────────── */
+@media (max-width: 500px) {
+  #toolbar { padding: 5px 8px; gap: 4px; }
+  .tool-btn { padding: 4px 7px; font-size: 11px; }
+  .hud-level-name { display: none; }
+}
