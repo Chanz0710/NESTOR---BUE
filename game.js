@@ -205,3 +205,108 @@ const LEVELS = [
       {type:"rect",x:94,y:87,w:4,h:16,color:"#2a3f58"},
     ]
   },
+  /* 11 ── HARDER elevated bucket with wall maze */
+  {
+    title:"Level 11", objective:"Thread the ball through the wall maze",
+    clue:"Draw a ramp past the first wall, then another to guide it into the elevated bucket.",
+    timeStar:28, shapesStar:2, shapesLimit:4, difficulty:"Hard",
+    redZones:[
+      {x:0, y:0,w:18,h:100},
+      {x:82,y:0,w:18,h:100},
+    ],
+    balls:[{x:28,y:8,r:17,color:"#e8a020"}],
+    targets:[{x:62,y:52}],
+    statics:[
+      /* blocking wall forces detour */
+      {type:"rect",x:44,y:20,w:6,h:38,color:"#3d7abf"},
+      /* elevated bucket platform */
+      {type:"rect",x:62,y:60,w:22,h:7,color:"#2a3f58"},
+      {type:"rect",x:51,y:60,w:4,h:18,color:"#2a3f58"},
+      {type:"rect",x:73,y:60,w:4,h:18,color:"#2a3f58"},
+      /* floor platform on left */
+      {type:"rect",x:28,y:87,w:20,h:8,color:"#2a3f58"},
+    ]
+  },
+  /* 12 ── Needle thread */
+  {
+    title:"Level 12", objective:"Thread the needle through the gaps",
+    clue:"Use the narrow open strip — one precise plank is all you need.",
+    timeStar:25, shapesStar:1, shapesLimit:2, difficulty:"Hard",
+    redZones:[
+      {x:0, y:0,w:22,h:100},
+      {x:40,y:0,w:20,h:100},
+      {x:75,y:0,w:25,h:100},
+    ],
+    balls:[{x:30,y:10,r:15,color:"#e8a020"}],
+    targets:[{x:60,y:80}],
+    statics:[
+      {type:"rect",x:58,y:87,w:22,h:8,color:"#2a3f58"},
+      {type:"rect",x:47,y:87,w:4,h:16,color:"#2a3f58"},
+      {type:"rect",x:69,y:87,w:4,h:16,color:"#2a3f58"},
+    ]
+  },
+  /* 13 ── Two balls two buckets */
+  {
+    title:"Level 13", objective:"Get 2 balls into their separate buckets",
+    clue:"Split the balls apart with a wedge in the center.",
+    timeStar:30, shapesStar:2, shapesLimit:4, difficulty:"Expert",
+    redZones:[],
+    balls:[
+      {x:35,y:10,r:14,color:"#e8a020"},
+      {x:65,y:10,r:14,color:"#1fb890"},
+    ],
+    targets:[
+      {x:18,y:80},
+      {x:82,y:80},
+    ],
+    statics:[
+      {type:"rect",x:16,y:87,w:22,h:8,color:"#2a3f58"},
+      {type:"rect",x:5, y:87,w:4,h:16,color:"#2a3f58"},
+      {type:"rect",x:27,y:87,w:4,h:16,color:"#2a3f58"},
+      {type:"rect",x:80,y:87,w:22,h:8,color:"#2a3f58"},
+      {type:"rect",x:69,y:87,w:4,h:16,color:"#2a3f58"},
+      {type:"rect",x:91,y:87,w:4,h:16,color:"#2a3f58"},
+    ]
+  },
+  /* 14 ── HARDER labyrinth: more red zones, ball must bounce off 3 walls */
+  {
+    title:"Level 14", objective:"Escape the labyrinth — only 1 shape!",
+    clue:"One perfectly placed plank can bounce the ball through all the gaps.",
+    timeStar:40, shapesStar:1, shapesLimit:1, difficulty:"Expert",
+    redZones:[
+      {x:0,  y:0,  w:18, h:100},
+      {x:82, y:0,  w:18, h:100},
+      {x:18, y:0,  w:64, h:16},
+      {x:18, y:35, w:50, h:14},
+      {x:32, y:60, w:50, h:14},
+      {x:18, y:82, w:30, h:18},
+    ],
+    balls:[{x:50,y:23,r:15,color:"#e8a020"}],
+    targets:[{x:68,y:90}],
+    statics:[
+      {type:"rect",x:68,y:94,w:20,h:6,color:"#2a3f58"},
+    ]
+  },
+  /* 15 ── Master challenge */
+  {
+    title:"Level 15", objective:"Master challenge — all elements combined",
+    clue:"Build a cascading ramp system. Think 3 steps ahead.",
+    timeStar:45, shapesStar:3, shapesLimit:5, difficulty:"Expert",
+    redZones:[
+      {x:55,y:0, w:20,h:70},
+      {x:0, y:50,w:30,h:50},
+    ],
+    balls:[
+      {x:15,y:10,r:16,color:"#e8a020"},
+      {x:80,y:10,r:16,color:"#1fb890"},
+    ],
+    targets:[{x:40,y:83,multi:2}],
+    statics:[
+      {type:"rect",x:38,y:87,w:30,h:8,color:"#2a3f58"},
+      {type:"rect",x:24,y:87,w:4,h:16,color:"#2a3f58"},
+      {type:"rect",x:52,y:87,w:4,h:16,color:"#2a3f58"},
+      {type:"rect",x:75,y:48,w:30,h:9,angle:0.35,color:"#3d7abf"},
+      {type:"rect",x:42,y:60,w:26,h:9,angle:-0.25,color:"#3d7abf"},
+    ],
+  },
+];
