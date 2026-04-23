@@ -537,3 +537,46 @@ const Game = {
     dc.addEventListener('touchend',  e=>{e.preventDefault();this.onDrawEnd(e.changedTouches[0]);},{passive:false});
     this.startDrawLoop();
   },
+  
+  getCanvasPos(e){
+    const dc=drawCanvas(), r=dc.getBoundingClientRect();
+    return {
+      x:(e.clientX-r.left)*(dc.width/r.width),
+      y:(e.clientY-r.top)*(dc.height/r.height),
+      xPct:((e.clientX-r.left)/r.width)*100,
+      yPct:((e.clientY-r.top)/r.height)*100,
+    };
+  },
+
+  onDrawStart(e){
+    if(State.paused||State.goalReached||State.launched) return;
+    if(State.shapesDrawn>=LEVELS[State.currentLevel].shapesLimit){
+      this.showToast('Shape limit reached! Undo or Launch.'); return;
+    }
+    const pos=this.getCanvasPos(e);
+    if(this.isInRedZone(pos.xPct,pos.yPct)){
+      this.showToast('Cannot draw in red zone!'); return;
+    }
+    State.isDrawing=true;
+    State.drawStart=pos;
+    State.freePoints=[pos];
+  },
+
+  onDrawMove(e){
+    if(!State.isDrawing) return;
+    const pos=this.getCanvasPos(e);
+    if(this.isInRedZone(pos.xPct,pos.yPct)){
+      State.isDrawing=false; State.freePoints=[];
+      this.showToast('Cannot draw in red zone!'); return;
+    }
+    State.freePoints.push(pos);
+  },
+
+  onDrawEnd(e){
+    if(!State.isDrawing) return;
+    State.isDrawing=false;
+    const pts=State.freePoints;
+    if(!pts||pts.length<2){ State.freePoints=[]; return; }
+    if(pts.some(p=>this.isInRedZone(p.xPct,p.yPct))){
+      State.freePoints=[]; this.showToast('Shape cancelled — crossed a red zone!'); return;
+    }
