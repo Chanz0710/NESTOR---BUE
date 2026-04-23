@@ -348,3 +348,18 @@ const State = {
   },
   getStars(levelIdx){ return this.levelStars[String(levelIdx)]||0; }
 };
+
+/* ─────────────────────────────────────────────────────────────
+   ENGINE REFS
+───────────────────────────────────────────────────────────── */
+let engine=null, mRender=null, runner=null, world=null;
+let drawLoopToken=null;
+
+const gameCanvas = ()=>document.getElementById('game-canvas');
+const drawCanvas = ()=>document.getElementById('draw-canvas');
+
+/* Invisible render — physics body exists but Matter renderer won't draw it */
+const HIDDEN = { fillStyle:'rgba(0,0,0,0)', strokeStyle:'rgba(0,0,0,0)', opacity:0 };
+
+const CAT_DEFAULT = 0x0001;
+const CAT_DRAWN   = 0x0002;
