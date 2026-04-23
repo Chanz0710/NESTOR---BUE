@@ -363,3 +363,42 @@ const HIDDEN = { fillStyle:'rgba(0,0,0,0)', strokeStyle:'rgba(0,0,0,0)', opacity
 
 const CAT_DEFAULT = 0x0001;
 const CAT_DRAWN   = 0x0002;
+
+/* ─────────────────────────────────────────────────────────────
+   MAIN GAME OBJECT
+───────────────────────────────────────────────────────────── */
+const Game = {
+
+  showScreen(name){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const el=document.getElementById('screen-'+name);
+    if(el) el.classList.add('active');
+    if(name==='level-select') this.buildLevelGrid();
+    if(name==='menu')         updateCoinDisplays();
+    if(name==='pause')
+      document.getElementById('pause-level-name').textContent=LEVELS[State.currentLevel].title;
+  },
+
+  buildLevelGrid(){
+    const grid=document.getElementById('level-grid');
+    grid.innerHTML='';
+    updateCoinDisplays();
+    LEVELS.forEach((lv,i)=>{
+      const unlocked=State.isUnlocked(i);
+      const stars=State.getStars(i);
+      const cell=document.createElement('div');
+      cell.className='level-cell'+(unlocked?'':' locked')
+        +(i===State.currentLevel?' current':'')
+        +(lv.redZones&&lv.redZones.length?' has-red':'');
+      const sh=[0,1,2].map(j=>`<span class="sm-star${stars>j?' earned':''}">★</span>`).join('');
+      cell.innerHTML=unlocked
+        ?`<div class="level-diff">${lv.difficulty}</div>
+          <div class="level-num">${i+1}</div>
+          <div class="level-stars-mini">${sh}</div>`
+        :`<div class="level-lock">🔒</div>`;
+      if(unlocked) cell.addEventListener('click',()=>this.startLevel(i));
+      grid.appendChild(cell);
+    });
+  },
+
+  
