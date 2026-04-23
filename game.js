@@ -1004,3 +1004,26 @@ const Game = {
     t._t=setTimeout(()=>{t.style.opacity='0';},2500);
   }
 };
+
+/* ─────────────────────────────────────────────────────────────
+   HELPERS + INIT
+───────────────────────────────────────────────────────────── */
+function updateCoinDisplays(){
+  ['menu-coin-count','ls-coin-count','hud-coins'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=State.coins;
+  });
+}
+
+window.addEventListener('load',()=>{
+  State.unlockLevel(0);
+  updateCoinDisplays();
+  Game.showScreen('menu');
+  window.addEventListener('resize',()=>{
+    if(document.getElementById('screen-game').classList.contains('active')&&engine){
+      Game.startLevel(State.currentLevel);
+    }
+  });
+});
+
+window.Game=Game;
