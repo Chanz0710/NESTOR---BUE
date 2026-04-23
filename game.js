@@ -401,4 +401,139 @@ const Game = {
     });
   },
 
-  
+   /* ── Start / Restart ─────────────────────── */
+  startLevel(idx){
+    if(drawLoopToken){ cancelAnimationFrame(drawLoopToken); drawLoopToken=null; }
+    this.stopTimer();
+    Object.assign(State,{
+      currentLevel:idx, timer:0, shapesDrawn:0,
+      paused:false, goalReached:false, launched:false,
+      drawnBodies:[], ballBodies:[], freePoints:[],
+      isDrawing:false, committedStrokes:[]
+    });
+    const lv=LEVELS[idx];
+    document.getElementById('hud-level-num').textContent   = idx+1;
+    document.getElementById('hud-level-name').textContent  = lv.title;
+    document.getElementById('hud-objective').textContent   = lv.objective;
+    document.getElementById('hud-shapes').textContent      = '0';
+    document.getElementById('hud-shape-limit').textContent = lv.shapesLimit;
+    document.getElementById('hud-timer').textContent       = '0.0';
+    document.getElementById('clue-display').classList.add('hidden');
+    document.getElementById('clue-cost').textContent       = this.clueCost(idx);
+    document.getElementById('timer-ring-fill').style.strokeDashoffset='0';
+    document.getElementById('timer-ring-fill').style.stroke='#e8a020';
+    this.showScreen('game');
+    this.initPhysics();
+    this.updateLaunchBtn();
+  },
+
+  /* ── Physics init ────────────────────────── */
+  initPhysics(){
+    if(runner)  { Runner.stop(runner);  runner=null;  }
+    if(mRender) { Render.stop(mRender); mRender=null; }
+    if(engine)  { World.clear(engine.world,false); Engine.clear(engine); engine=null; }
+
+    const parent=document.getElementById('game-area');
+    const W=parent.clientWidth||640, H=parent.clientHeight||480;
+
+    const gc=gameCanvas();
+    gc.width=W; gc.height=H;
+
+    /* Fresh draw canvas — kills stale listeners */
+    const oldDc=drawCanvas();
+    const newDc=oldDc.cloneNode(false);
+    newDc.id='draw-canvas'; newDc.width=W; newDc.height=H;
+    oldDc.parentNode.replaceChild(newDc,oldDc);
+
+    engine=Engine.create({gravity:{y:1.0}});
+    world=engine.world;
+
+    mRender=Render.create({
+      canvas:gc, engine,
+      options:{width:W,height:H,wireframes:false,background:'#141c27'}
+    });
+
+    const lv=LEVELS[State.currentLevel];
+    const px=v=>v/100*W, py=v=>v/100*H;
+
+    /* Boundaries */
+    World.add(world,[
+      Bodies.rectangle(W/2,H+30,W*2,60,{isStatic:true,render:{fillStyle:'#1a2332'}}),
+      Bodies.rectangle(-30,H/2,60,H*2,{isStatic:true,render:{fillStyle:'#1a2332'}}),
+      Bodies.rectangle(W+30,H/2,60,H*2,{isStatic:true,render:{fillStyle:'#1a2332'}}),
+    ]);
+
+    /* Level statics / dynamics */
+    lv.statics.forEach(s=>{
+      const isDyn=!!s.isDynamic;
+      const opts={
+        isStatic:!isDyn,
+        angle:s.angle||0,
+        friction:SURF_FRICTION,
+        frictionStatic:SURF_FRICTION_STATIC,
+        restitution:SURF_RESTITUTION,
+        render:{fillStyle:s.color||'#2a3f58'},
+        label:s.label||'static',
+        collisionFilter:{category:CAT_DEFAULT, mask:CAT_DEFAULT|CAT_DRAWN}
+      };
+      let b;
+      if(s.type==='rect')   b=Bodies.rectangle(px(s.x),py(s.y),px(s.w),py(s.h),opts);
+      if(s.type==='circle') b=Bodies.circle(px(s.x),py(s.y),px(s.r||5),opts);
+      if(!b) return;
+      World.add(world,b);
+      /* Pin pivot seesaws at their centre */
+      if(s.isPivot && isDyn){
+        World.add(world, Constraint.create({
+          pointA:{x:px(s.x),y:py(s.y)},
+          bodyB:b, pointB:{x:0,y:0},
+          stiffness:1, length:0,
+          render:{strokeStyle:'#4a6fa5',lineWidth:3}
+        }));
+      }
+    });
+
+    Events.on(engine,'afterUpdate',()=>this.checkWin());
+    runner=Runner.create();
+    Runner.run(runner,engine);
+    Render.run(mRender);
+
+    this.drawRedZones();
+    this.setupDrawCanvas();
+  },
+
+    /* ── Red zones ───────────────────────────── */
+  drawRedZones(){
+    const overlay=document.getElementById('red-zones-overlay');
+    overlay.innerHTML='';
+    LEVELS[State.currentLevel].redZones.forEach(rz=>{
+      const div=document.createElement('div');
+      div.style.cssText=`position:absolute;left:${rz.x}%;top:${rz.y}%;width:${rz.w}%;height:${rz.h}%;`
+        +`background:rgba(192,57,43,0.15);border:1.5px solid rgba(192,57,43,0.5);pointer-events:none;`;
+      const lbl=document.createElement('div');
+      lbl.textContent='NO DRAW';
+      lbl.style.cssText=`position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);`
+        +`font-size:11px;font-weight:900;letter-spacing:0.1em;color:rgba(192,57,43,0.55);`
+        +`font-family:'Orbitron',monospace;white-space:nowrap;pointer-events:none;`;
+      div.appendChild(lbl);
+      overlay.appendChild(div);
+    });
+  },
+
+  isInRedZone(xPct,yPct){
+    return LEVELS[State.currentLevel].redZones.some(
+      rz=>xPct>=rz.x&&xPct<=rz.x+rz.w&&yPct>=rz.y&&yPct<=rz.y+rz.h
+    );
+  },
+
+  /* ── Draw canvas ─────────────────────────── */
+  setupDrawCanvas(){
+    const dc=drawCanvas();
+    dc.addEventListener('mousedown', e=>this.onDrawStart(e));
+    dc.addEventListener('mousemove', e=>this.onDrawMove(e));
+    dc.addEventListener('mouseup',   e=>this.onDrawEnd(e));
+    dc.addEventListener('mouseleave',e=>{ if(State.isDrawing) this.onDrawEnd(e); });
+    dc.addEventListener('touchstart',e=>{e.preventDefault();this.onDrawStart(e.touches[0]);},{passive:false});
+    dc.addEventListener('touchmove', e=>{e.preventDefault();this.onDrawMove(e.touches[0]);},{passive:false});
+    dc.addEventListener('touchend',  e=>{e.preventDefault();this.onDrawEnd(e.changedTouches[0]);},{passive:false});
+    this.startDrawLoop();
+  },
