@@ -537,7 +537,7 @@ const Game = {
     dc.addEventListener('touchend',  e=>{e.preventDefault();this.onDrawEnd(e.changedTouches[0]);},{passive:false});
     this.startDrawLoop();
   },
-  
+
   getCanvasPos(e){
     const dc=drawCanvas(), r=dc.getBoundingClientRect();
     return {
@@ -580,3 +580,298 @@ const Game = {
     if(pts.some(p=>this.isInRedZone(p.xPct,p.yPct))){
       State.freePoints=[]; this.showToast('Shape cancelled — crossed a red zone!'); return;
     }
+
+    const sx=State.drawStart.x, sy=State.drawStart.y;
+    const ep=pts[pts.length-1];
+    const ex=ep.x, ey=ep.y;
+    let committed=false;
+
+    /* ── WEIGHT tools (rect / circle) ──
+       Frozen as static until Launch, then unfrozen.
+       All have identical surface props so no speed penalty. */
+    if(State.currentTool==='rect'){
+      const w=Math.abs(ex-sx), h=Math.abs(ey-sy);
+      if(w>15&&h>15){
+        const area=w*h;
+        const density=Math.min(0.012,Math.max(0.003,area/60000));
+        const body=Bodies.rectangle(
+          sx+(ex-sx)/2, sy+(ey-sy)/2, Math.max(w,15), Math.max(h,15),
+          { isStatic:true, density,
+            friction:WEIGHT_FRICTION, frictionStatic:WEIGHT_FRICTION_STATIC,
+            restitution:WEIGHT_RESTITUTION,
+            collisionFilter:{category:CAT_DRAWN,mask:CAT_DEFAULT|CAT_DRAWN},
+            render:HIDDEN, label:'drawn_dynamic' }
+        );
+        World.add(world,body);
+        State.drawnBodies.push({isGroup:false,body});
+        State.committedStrokes.push({type:'rect',sx,sy,ex,ey});
+        committed=true;
+      }
+
+    } else if(State.currentTool==='circle'){
+      const rad=Math.min(120,Math.max(12,Math.hypot(ex-sx,ey-sy)));
+      const density=Math.min(0.012,Math.max(0.003,(rad*rad)/20000));
+      const body=Bodies.circle(sx,sy,rad,
+        { isStatic:true, density,
+          friction:WEIGHT_FRICTION, frictionStatic:WEIGHT_FRICTION_STATIC,
+          restitution:WEIGHT_RESTITUTION,
+          collisionFilter:{category:CAT_DRAWN,mask:CAT_DEFAULT|CAT_DRAWN},
+          render:HIDDEN, label:'drawn_dynamic' }
+      );
+      World.add(world,body);
+      State.drawnBodies.push({isGroup:false,body});
+      State.committedStrokes.push({type:'circle',sx,sy,rad});
+      committed=true;
+
+    /* ── RAMP tools (plank / freehand) ──
+       Static forever. Friction IDENTICAL to freehand segments
+       so the ball never changes speed when crossing tool boundaries. */
+    } else if(State.currentTool==='line'){
+      const cx=(sx+ex)/2, cy=(sy+ey)/2;
+      const len=Math.max(30,Math.hypot(ex-sx,ey-sy));
+      const angle=Math.atan2(ey-sy,ex-sx);
+      const body=Bodies.rectangle(cx,cy,len,14,
+        { angle, isStatic:true,
+          friction:SURF_FRICTION, frictionStatic:SURF_FRICTION_STATIC,
+          restitution:SURF_RESTITUTION,
+          collisionFilter:{category:CAT_DRAWN,mask:CAT_DEFAULT|CAT_DRAWN},
+          render:HIDDEN, label:'drawn' }
+      );
+      World.add(world,body);
+      State.drawnBodies.push({isGroup:false,body});
+      State.committedStrokes.push({type:'line',sx,sy,ex,ey});
+      committed=true;
+
+    } else if(State.currentTool==='free'){
+      const step=Math.max(1,Math.floor(pts.length/40));
+      const simplified=pts.filter((_,i)=>i%step===0||i===pts.length-1);
+      if(simplified.length>=2){
+        const segBodies=[];
+        for(let i=0;i<simplified.length-1;i++){
+          const a=simplified[i], b2=simplified[i+1];
+          const segLen=Math.hypot(b2.x-a.x,b2.y-a.y);
+          if(segLen<4) continue;
+          segBodies.push(Bodies.rectangle(
+            (a.x+b2.x)/2,(a.y+b2.y)/2, segLen, 12,
+            { angle:Math.atan2(b2.y-a.y,b2.x-a.x), isStatic:true,
+              friction:SURF_FRICTION, frictionStatic:SURF_FRICTION_STATIC,
+              restitution:SURF_RESTITUTION,
+              collisionFilter:{category:CAT_DRAWN,mask:CAT_DEFAULT|CAT_DRAWN},
+              render:HIDDEN, label:'drawn_seg' }
+          ));
+        }
+        if(segBodies.length){
+          segBodies.forEach(b=>World.add(world,b));
+          State.drawnBodies.push({isGroup:true,bodies:segBodies});
+          State.committedStrokes.push({type:'free',pts:[...pts]});
+          committed=true;
+        }
+      }
+    }
+
+    if(committed){
+      State.shapesDrawn++;
+      document.getElementById('hud-shapes').textContent=State.shapesDrawn;
+      this.updateLaunchBtn();
+    }
+    State.freePoints=[];
+  },
+
+  /* ── Draw loop ───────────────────────────── */
+  startDrawLoop(){
+    if(drawLoopToken){ cancelAnimationFrame(drawLoopToken); drawLoopToken=null; }
+    const tick=()=>{ this.renderDrawCanvas(); drawLoopToken=requestAnimationFrame(tick); };
+    drawLoopToken=requestAnimationFrame(tick);
+  },
+
+  renderDrawCanvas(){
+    const dc=drawCanvas(); if(!dc) return;
+    const ctx=dc.getContext('2d');
+    const W=dc.width, H=dc.height;
+    ctx.clearRect(0,0,W,H);
+    const px=v=>v/100*W, py=v=>v/100*H;
+    const lv=LEVELS[State.currentLevel];
+
+    /* Target rings */
+    lv.targets.forEach(t=>{
+      ctx.save();
+      ctx.beginPath(); ctx.arc(px(t.x),py(t.y),34,0,Math.PI*2);
+      ctx.fillStyle='rgba(31,184,144,0.12)'; ctx.strokeStyle='#1fb890'; ctx.lineWidth=2.5;
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#1fb890'; ctx.font='700 11px Nunito,sans-serif';
+      ctx.textAlign='center'; ctx.fillText('TARGET',px(t.x),py(t.y)+4);
+      ctx.restore();
+    });
+
+    /* Ghost balls before launch */
+    if(!State.launched){
+      lv.balls.forEach(bd=>{
+        ctx.save();
+        ctx.beginPath(); ctx.arc(px(bd.x),py(bd.y),bd.r,0,Math.PI*2);
+        ctx.fillStyle=bd.color+'44'; ctx.strokeStyle=bd.color; ctx.lineWidth=2;
+        ctx.setLineDash([4,4]); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+        ctx.restore();
+      });
+      /* Banner */
+      ctx.save();
+      const bw=Math.min(W*0.78,500), bh=28, bx=(W-bw)/2, by=8;
+      ctx.fillStyle='rgba(14,22,34,0.82)';
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(bx,by,bw,bh,7); else ctx.rect(bx,by,bw,bh);
+      ctx.fill();
+      ctx.fillStyle='#e8a020'; ctx.font='700 11px Nunito,sans-serif'; ctx.textAlign='center';
+      const isWeight=(State.currentTool==='rect'||State.currentTool==='circle');
+      ctx.fillText(
+        isWeight
+          ? '⚖ WEIGHT — shape falls on Launch  ·  size = mass'
+          : '✏ RAMP — shape stays fixed  ·  switch to Rect/Circle for weights',
+        W/2, by+18
+      );
+      ctx.restore();
+    }
+
+    /* Committed strokes */
+    State.committedStrokes.forEach(s=>{
+      ctx.save();
+      ctx.lineCap='round'; ctx.lineJoin='round'; ctx.setLineDash([]);
+
+      if(s.type==='free'){
+        ctx.strokeStyle='#4a6fa5'; ctx.lineWidth=12;
+        ctx.beginPath();
+        s.pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+        ctx.stroke();
+        ctx.strokeStyle='rgba(120,170,230,0.3)'; ctx.lineWidth=4;
+        ctx.beginPath();
+        s.pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+        ctx.stroke();
+
+      } else if(s.type==='line'){
+        const dx=s.ex-s.sx, dy=s.ey-s.sy;
+        const len=Math.hypot(dx,dy), angle=Math.atan2(dy,dx);
+        ctx.translate((s.sx+s.ex)/2,(s.sy+s.ey)/2); ctx.rotate(angle);
+        ctx.fillStyle='#d4943a';
+        ctx.beginPath(); ctx.roundRect(-len/2,-7,len,14,4); ctx.fill();
+        ctx.strokeStyle='rgba(255,200,100,0.25)'; ctx.lineWidth=1.5; ctx.stroke();
+
+      } else if(s.type==='rect'){
+        const rx=Math.min(s.sx,s.ex), ry=Math.min(s.sy,s.ey);
+        const rw=Math.abs(s.ex-s.sx), rh=Math.abs(s.ey-s.sy);
+        const heaviness=rw*rh>20000?'Heavy':rw*rh>8000?'Medium':'Light';
+        ctx.fillStyle=State.launched?'rgba(200,100,30,0.6)':'rgba(200,100,30,0.42)';
+        ctx.strokeStyle='#d4693a'; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.roundRect(rx,ry,rw,rh,4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='rgba(255,185,110,0.92)'; ctx.font='bold 11px Nunito,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(State.launched?`⚖ ${heaviness}`:`⚖ ${heaviness} · drops on launch`, rx+rw/2, ry+rh/2);
+
+      } else if(s.type==='circle'){
+        const area=Math.PI*s.rad*s.rad;
+        const heaviness=area>15000?'Heavy':area>5000?'Medium':'Light';
+        ctx.fillStyle=State.launched?'rgba(200,100,30,0.5)':'rgba(200,100,30,0.35)';
+        ctx.strokeStyle='#d4693a'; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.arc(s.sx,s.sy,s.rad,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='rgba(255,185,110,0.92)'; ctx.font='bold 11px Nunito,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(`⚖ ${heaviness}`, s.sx, s.sy);
+      }
+      ctx.restore();
+    });
+
+    /* Live preview */
+    if(State.isDrawing&&State.freePoints.length>1){
+      const pts=State.freePoints;
+      ctx.save();
+      ctx.strokeStyle='rgba(232,160,32,0.9)';
+      ctx.lineWidth=State.currentTool==='line'?14:8;
+      ctx.lineCap='round'; ctx.lineJoin='round'; ctx.setLineDash([]);
+      if(State.currentTool==='free'){
+        ctx.beginPath();
+        pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+        ctx.stroke();
+      } else if(State.currentTool==='rect'){
+        const s=pts[0],e=pts[pts.length-1];
+        ctx.fillStyle='rgba(232,160,32,0.08)';
+        ctx.strokeRect(s.x,s.y,e.x-s.x,e.y-s.y);
+        ctx.fillRect(s.x,s.y,e.x-s.x,e.y-s.y);
+      } else if(State.currentTool==='circle'){
+        const s=pts[0],e=pts[pts.length-1];
+        ctx.fillStyle='rgba(232,160,32,0.08)';
+        ctx.beginPath(); ctx.arc(s.x,s.y,Math.hypot(e.x-s.x,e.y-s.y),0,Math.PI*2);
+        ctx.fill(); ctx.stroke();
+      } else if(State.currentTool==='line'){
+        const s=pts[0],e=pts[pts.length-1];
+        ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(e.x,e.y); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  },
+
+  /* ── Launch button ───────────────────────── */
+  updateLaunchBtn(){
+    let btn=document.getElementById('btn-launch');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.id='btn-launch'; btn.className='hud-btn launch-btn';
+      btn.style.cssText='background:#1fb890;color:#041a12;border-color:#1fb890;font-weight:800;';
+      btn.onclick=()=>Game.launch();
+      document.getElementById('game-hud').appendChild(btn);
+    }
+    if(State.launched){
+      btn.textContent='🚀 Launched'; btn.disabled=true; btn.style.opacity='0.45';
+    } else {
+      btn.textContent='🚀 Launch!'; btn.disabled=false; btn.style.opacity='1';
+    }
+  },
+
+  launch(){
+    if(State.launched||State.goalReached) return;
+    State.launched=true;
+    this.updateLaunchBtn();
+
+    const lv=LEVELS[State.currentLevel];
+    const W=gameCanvas().width, H=gameCanvas().height;
+    const px=v=>v/100*W, py=v=>v/100*H;
+
+    /* Unfreeze weight bodies — Body.setStatic(false) restores mass from
+       density that was stored at creation, no override needed */
+    State.drawnBodies.forEach(entry=>{
+      (entry.isGroup?entry.bodies:[entry.body]).forEach(b=>{
+        if(b.label==='drawn_dynamic') Body.setStatic(b,false);
+      });
+    });
+
+    /* Spawn balls */
+    lv.balls.forEach((bd,bi)=>{
+      const ball=Bodies.circle(px(bd.x),py(bd.y),bd.r,{
+        restitution:BALL_RESTITUTION,
+        friction:BALL_FRICTION,
+        frictionStatic:BALL_FRICTION_STATIC,
+        frictionAir:BALL_FRICTION_AIR,
+        density:BALL_DENSITY,
+        render:{fillStyle:bd.color||'#e8a020'},
+        label:'ball_'+bi,
+        collisionFilter:{category:CAT_DEFAULT,mask:CAT_DEFAULT|CAT_DRAWN}
+      });
+      State.ballBodies.push(ball);
+      World.add(world,ball);
+    });
+
+    this.startTimer();
+  },
+
+  /* ── Win detection ───────────────────────── */
+  checkWin(){
+    if(State.goalReached||State.paused||!State.launched||!State.ballBodies.length) return;
+    const lv=LEVELS[State.currentLevel];
+    const W=gameCanvas().width, H=gameCanvas().height;
+    const px=v=>v/100*W, py=v=>v/100*H;
+    const allIn=lv.targets.every(t=>{
+      const tx=px(t.x),ty=py(t.y),needed=t.multi||1;
+      let count=0;
+      State.ballBodies.forEach(b=>{
+        if(Math.hypot(b.position.x-tx,b.position.y-ty)<55) count++;
+      });
+      return count>=needed;
+    });
+    if(allIn) this.triggerWin();
+  },
