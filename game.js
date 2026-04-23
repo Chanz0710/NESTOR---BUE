@@ -875,3 +875,132 @@ const Game = {
     });
     if(allIn) this.triggerWin();
   },
+
+  triggerWin(){
+    State.goalReached=true; this.stopTimer(); this.showGoalCountdown(3);
+  },
+
+  showGoalCountdown(n){
+    document.getElementById('goal-countdown').textContent=n;
+    this.showScreen('goal');
+    if(n>0) setTimeout(()=>this.showGoalCountdown(n-1),1000);
+    else    this.showLevelComplete();
+  },
+
+  showLevelComplete(){
+    const lv=LEVELS[State.currentLevel];
+    const idx=State.currentLevel;
+    const t=State.timer, sh=State.shapesDrawn;
+    let stars=1;
+    if(t<=lv.timeStar)    stars=Math.max(stars,2);
+    if(sh<=lv.shapesStar) stars=Math.max(stars,2);
+    if(t<=lv.timeStar&&sh<=lv.shapesStar) stars=3;
+    State.setStars(idx,stars);
+    const coinReward=stars*3;
+    State.addCoins(coinReward);
+    if(idx+1<LEVELS.length) State.unlockLevel(idx+1);
+    document.getElementById('complete-level-name').textContent=lv.title;
+    document.getElementById('c-time').textContent            =t.toFixed(1)+'s';
+    document.getElementById('c-shapes').textContent         =sh+(sh===1?' shape':' shapes');
+    document.getElementById('c-goal-time').textContent      =lv.timeStar+'s';
+    document.getElementById('c-goal-shapes').textContent    =lv.shapesStar+(lv.shapesStar===1?' shape':' shapes');
+    document.getElementById('complete-coin-reward').textContent='+'+coinReward;
+    document.getElementById('star2-time').textContent       =t.toFixed(1)+'s';
+    document.getElementById('star3-shapes').textContent     =sh+' shape'+(sh===1?'':'s');
+    [1,2,3].forEach((n,i)=>{
+      const wrap=document.getElementById('star'+n);
+      wrap.classList.remove('earned');
+      if(n<=stars) setTimeout(()=>wrap.classList.add('earned'),200+i*200);
+    });
+    this.showScreen('complete');
+    updateCoinDisplays();
+  },
+
+  /* ── Timer ───────────────────────────────── */
+  startTimer(){
+    this.stopTimer();
+    const lv=LEVELS[State.currentLevel];
+    const ringEl=document.getElementById('timer-ring-fill');
+    State.timerInterval=setInterval(()=>{
+      if(!State.paused&&!State.goalReached){
+        State.timer+=0.1;
+        document.getElementById('hud-timer').textContent=State.timer.toFixed(1);
+        const prog=Math.min(1,State.timer/(lv.timeStar*1.5));
+        ringEl.style.strokeDashoffset=113*prog;
+        ringEl.style.stroke=prog<0.6?'#e8a020':prog<0.85?'#d4943a':'#c0392b';
+      }
+    },100);
+  },
+  stopTimer(){ if(State.timerInterval){clearInterval(State.timerInterval);State.timerInterval=null;} },
+
+  togglePause(){
+    State.paused=!State.paused;
+    this.showScreen(State.paused?'pause':'game');
+  },
+
+  restartLevel(){ this.startLevel(State.currentLevel); },
+
+  nextLevel(){
+    const next=State.currentLevel+1;
+    if(next<LEVELS.length&&State.isUnlocked(next)) this.startLevel(next);
+    else this.showScreen('level-select');
+  },
+
+  undoLast(){
+    if(!world||!State.drawnBodies.length) return;
+    const entry=State.drawnBodies.pop();
+    if(entry.isGroup) entry.bodies.forEach(b=>World.remove(world,b));
+    else              World.remove(world,entry.body);
+    State.committedStrokes.pop();
+    State.shapesDrawn=Math.max(0,State.shapesDrawn-1);
+    document.getElementById('hud-shapes').textContent=State.shapesDrawn;
+    this.updateLaunchBtn();
+  },
+
+  clearDrawn(){
+    if(!world) return;
+    State.drawnBodies.forEach(entry=>{
+      if(entry.isGroup) entry.bodies.forEach(b=>World.remove(world,b));
+      else              World.remove(world,entry.body);
+    });
+    State.drawnBodies=[]; State.committedStrokes=[];
+    State.shapesDrawn=0;
+    document.getElementById('hud-shapes').textContent=0;
+    this.updateLaunchBtn();
+  },
+
+  setTool(t){
+    State.currentTool=t;
+    document.querySelectorAll('.tool-btn[id^="tool-"]').forEach(b=>b.classList.remove('active'));
+    const btn=document.getElementById('tool-'+t);
+    if(btn) btn.classList.add('active');
+  },
+
+  clueCost(idx){ return Math.max(5,Math.floor(idx/3)*5+5); },
+
+  useClue(){
+    const idx=State.currentLevel, cost=this.clueCost(idx);
+    if(State.coins<cost){ this.showToast(`Need ${cost} coins. You have ${State.coins}.`); return; }
+    State.addCoins(-cost);
+    const el=document.getElementById('clue-display');
+    el.textContent='💡 '+LEVELS[idx].clue;
+    el.classList.remove('hidden');
+    setTimeout(()=>el.classList.add('hidden'),6000);
+    updateCoinDisplays();
+  },
+
+  showToast(msg){
+    let t=document.getElementById('toast');
+    if(!t){
+      t=document.createElement('div'); t.id='toast';
+      t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);'
+        +'background:#1e2d40;border:1px solid #2e4057;color:#8aa0b8;'
+        +'font-size:13px;font-weight:700;padding:10px 18px;border-radius:10px;'
+        +'z-index:999;pointer-events:none;font-family:Nunito,sans-serif;transition:opacity 0.3s;';
+      document.body.appendChild(t);
+    }
+    t.textContent=msg; t.style.opacity='1';
+    clearTimeout(t._t);
+    t._t=setTimeout(()=>{t.style.opacity='0';},2500);
+  }
+};
