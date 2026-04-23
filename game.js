@@ -310,3 +310,41 @@ const LEVELS = [
     ],
   },
 ];
+/* ─────────────────────────────────────────────────────────────
+   GAME STATE
+───────────────────────────────────────────────────────────── */
+const State = {
+  coins:          parseInt(localStorage.getItem('bio_coins')    || '0'),
+  unlockedLevels: JSON.parse(localStorage.getItem('bio_unlocked')|| '[0]'),
+  levelStars:     JSON.parse(localStorage.getItem('bio_stars')  || '{}'),
+  currentLevel:   0,
+  timer:          0,
+  shapesDrawn:    0,
+  paused:         false,
+  goalReached:    false,
+  launched:       false,
+  timerInterval:  null,
+  drawnBodies:    [],
+  ballBodies:     [],
+  currentTool:    'free',
+  isDrawing:      false,
+  drawStart:      {x:0,y:0},
+  freePoints:     [],
+  committedStrokes:[],
+
+  save(){
+    localStorage.setItem('bio_coins',    String(this.coins));
+    localStorage.setItem('bio_unlocked', JSON.stringify(this.unlockedLevels));
+    localStorage.setItem('bio_stars',    JSON.stringify(this.levelStars));
+  },
+  unlockLevel(idx){
+    if(!this.unlockedLevels.includes(idx)){this.unlockedLevels.push(idx);this.save();}
+  },
+  isUnlocked(idx){ return this.unlockedLevels.includes(idx); },
+  addCoins(n){ this.coins+=n; this.save(); updateCoinDisplays(); },
+  setStars(levelIdx,stars){
+    const k=String(levelIdx);
+    if(!this.levelStars[k]||stars>this.levelStars[k]){this.levelStars[k]=stars;this.save();}
+  },
+  getStars(levelIdx){ return this.levelStars[String(levelIdx)]||0; }
+};
