@@ -433,6 +433,7 @@ const Game = {
     if(name==='menu')         updateCoinDisplays();
     if(name==='pause')
       document.getElementById('pause-level-name').textContent=LEVELS[State.currentLevel].title;
+    Audio.click();
   },
 
   buildLevelGrid(){
@@ -882,6 +883,7 @@ const Game = {
   launch(){
     if(State.launched||State.goalReached) return;
     State.launched=true;
+    Audio.launch();
     this.updateLaunchBtn();
 
     const lv=LEVELS[State.currentLevel];
@@ -933,7 +935,10 @@ const Game = {
   },
 
   triggerWin(){
-    State.goalReached=true; this.stopTimer(); this.showGoalCountdown(3);
+    State.goalReached=true; 
+    Audio.win();
+    this.stopTimer(); 
+    this.showGoalCountdown(3);
   },
 
   showGoalCountdown(n){
@@ -1082,7 +1087,7 @@ window.addEventListener('load',()=>{
 
   /* Start music on first click anywhere (bypasses autoplay policy) */
   document.body.addEventListener('click', ()=>Audio.init(), { once:true });
-  
+
   window.addEventListener('resize',()=>{
     if(document.getElementById('screen-game').classList.contains('active')&&engine){
       Game.startLevel(State.currentLevel);
