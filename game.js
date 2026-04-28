@@ -1075,6 +1075,14 @@ window.addEventListener('load',()=>{
   State.unlockLevel(0);
   updateCoinDisplays();
   Game.showScreen('menu');
+
+  /* Sync muted states with saved prefs */
+  if(!Audio.musicOn) document.getElementById('btn-music')?.classList.add('muted');
+  if(!Audio.sfxOn)   document.getElementById('btn-sfx')?.classList.add('muted');
+
+  /* Start music on first click anywhere (bypasses autoplay policy) */
+  document.body.addEventListener('click', ()=>Audio.init(), { once:true });
+  
   window.addEventListener('resize',()=>{
     if(document.getElementById('screen-game').classList.contains('active')&&engine){
       Game.startLevel(State.currentLevel);
