@@ -1,5 +1,61 @@
 'use strict';
 
+/* ─────────────────────────────────────────────────────────────
+   AUDIO MANAGER
+───────────────────────────────────────────────────────────── */
+const Audio = {
+  musicOn: localStorage.getItem('bio_music') !== 'off',
+  sfxOn:   localStorage.getItem('bio_sfx')   !== 'off',
+
+  _el(id) { return document.getElementById(id); },
+
+  /* Call once after first user interaction — browsers block autoplay */
+  init(){
+    if(this.musicOn) this.playMusic();
+  },
+
+  playMusic(){
+    const m = this._el('bg-music');
+    if(!m) return;
+    m.volume = 0.35;
+    m.play().catch(()=>{});
+  },
+
+  stopMusic(){
+    const m = this._el('bg-music');
+    if(m) m.pause();
+  },
+
+  toggleMusic(){
+    this.musicOn = !this.musicOn;
+    localStorage.setItem('bio_music', this.musicOn ? 'on' : 'off');
+    const btn = document.getElementById('btn-music');
+    if(this.musicOn){ this.playMusic(); btn && btn.classList.remove('muted'); }
+    else            { this.stopMusic(); btn && btn.classList.add('muted');    }
+  },
+
+  toggleSFX(){
+    this.sfxOn = !this.sfxOn;
+    localStorage.setItem('bio_sfx', this.sfxOn ? 'on' : 'off');
+    const btn = document.getElementById('btn-sfx');
+    btn && btn.classList.toggle('muted', !this.sfxOn);
+  },
+
+  play(id, volumeOverride){
+    if(!this.sfxOn) return;
+    const el = this._el(id);
+    if(!el) return;
+    el.volume = volumeOverride ?? 0.6;
+    el.currentTime = 0;
+    el.play().catch(()=>{});
+  },
+
+  /* Convenience shortcuts */
+  win()   { this.play('sfx-win',    0.8); },
+  launch(){ this.play('sfx-launch', 0.7); },
+  click() { this.play('sfx-click',  0.45); },
+};
+
 const {
   Engine, Render, Runner,
   Bodies, Body, Constraint, World, Events
