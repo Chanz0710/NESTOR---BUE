@@ -550,6 +550,25 @@ const Game = {
     });
 
     Events.on(engine,'afterUpdate',()=>this.checkWin());
+
+    Events.on(engine, 'collisionStart', event => {
+  const now = Date.now();
+  if(now - (Audio._lastBounce || 0) < 80) return; // 80ms cooldown
+  const pairs = event.pairs;
+  for(let i = 0; i < pairs.length; i++){
+    const {bodyA, bodyB} = pairs[i];
+    const isBall = bodyA.label.startsWith('ball_') || bodyB.label.startsWith('ball_');
+    if(isBall){
+      /* Scale volume by impact speed — soft touches are quieter */
+      const vel = bodyA.label.startsWith('ball_') ? bodyA.speed : bodyB.speed;
+      const vol = Math.min(0.9, Math.max(0.1, vel / 18));
+      Audio.play('sfx-bounce', vol);
+      Audio._lastBounce = now;
+      break;
+    }
+  }
+});
+
     runner=Runner.create();
     Runner.run(runner,engine);
     Render.run(mRender);
