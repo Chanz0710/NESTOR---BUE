@@ -39,6 +39,14 @@ const Audio = {
     localStorage.setItem('bio_sfx', this.sfxOn ? 'on' : 'off');
     const btn = document.getElementById('btn-sfx');
     btn && btn.classList.toggle('muted', !this.sfxOn);
+
+    /* If muting, stop all currently playing SFX immediately */
+    if(!this.sfxOn){
+      ['sfx-bounce','sfx-win','sfx-launch','sfx-click'].forEach(id=>{
+        const el = this._el(id);
+        if(el){ el.pause(); el.currentTime = 0; }
+      });
+    }
   },
 
   play(id, volumeOverride){
