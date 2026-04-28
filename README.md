@@ -1,3 +1,4 @@
+
 #  Make It Right
 
 A physics-based puzzle game where you draw shapes to guide a ball into the target bucket.
@@ -38,3 +39,4 @@ Built with HTML, CSS, JavaScript, and Matter.js physics engine.
 ##  Team Members
 - Grant james D. Bue  
 - Chance Darwin S. Nestor 
+
