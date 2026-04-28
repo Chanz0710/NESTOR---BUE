@@ -17,7 +17,7 @@ const Audio = {
   playMusic(){
     const m = this._el('bg-music');
     if(!m) return;
-    m.volume = 0.35;
+    m.volume = 0.70;
     m.play().catch(()=>{});
   },
 
@@ -51,7 +51,34 @@ const Audio = {
   },
 
   /* Convenience shortcuts */
-  win()   { this.play('sfx-win',    0.8); },
+  win(){
+  /* Fade music down before win SFX plays */
+  const m = this._el('bg-music');
+  if(m && this.musicOn){
+    const originalVol = m.volume;
+    const fadeOut = setInterval(()=>{
+      if(m.volume > 0.05){ m.volume = Math.max(0, m.volume - 0.05); }
+      else{
+        clearInterval(fadeOut);
+        m.volume = 0;
+        /* Play win SFX once music is faded */
+        this.play('sfx-win', 0.4);
+        /* Fade music back in after win SFX finishes */
+        const sfx = this._el('sfx-win');
+        const delay = 1800; 
+        setTimeout(()=>{
+          const fadeIn = setInterval(()=>{
+            if(m.volume < originalVol - 0.05){ m.volume = Math.min(originalVol, m.volume + 0.05); }
+            else{ m.volume = originalVol; clearInterval(fadeIn); }
+          }, 50);
+        }, delay);
+      }
+    }, 50);
+  } else {
+    /* No music playing, just play win SFX normally */
+    this.play('sfx-win', 0.4);
+  }
+},
   launch(){ this.play('sfx-launch', 0.7); },
   click() { this.play('sfx-click',  0.45); },
 };
